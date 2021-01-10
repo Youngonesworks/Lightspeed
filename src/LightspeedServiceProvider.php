@@ -2,26 +2,21 @@
 
 namespace YoungOnes\Lightspeed;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use YoungOnes\Lightspeed\Console\ServerCommand;
+use YoungOnes\Lightspeed\Server\Events\DataReceived;
 
 class LightspeedServiceProvider extends ServiceProvider
 {
-    /**
-     * Perform post-registration booting of services.
-     *
-     * @return void
-     */
+
     public function boot(): void
     {
-        // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'youngones');
-        // $this->loadViewsFrom(__DIR__.'/../resources/views', 'youngones');
-        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        // $this->loadRoutesFrom(__DIR__.'/routes.php');
+        $this->publishes([
+            __DIR__.'/../config/lightspeed_server.php' => config_path('lightspeed_server.php'),
+        ], 'lightspeed.config');
 
-        // Publishing is only necessary when using the CLI.
-        if ($this->app->runningInConsole()) {
-            $this->bootForConsole();
-        }
+
     }
 
     /**
@@ -31,12 +26,18 @@ class LightspeedServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/lightspeed.php', 'lightspeed');
+        $this->mergeConfigFrom(__DIR__.'/../config/lightspeed_server.php', 'lightspeed_server');
 
         // Register the service the package provides.
         $this->app->singleton('lightspeed', function ($app) {
             return new Lightspeed;
         });
+
+        $this->commands([
+            ServerCommand::class
+        ]);
+
+        $this->registerListeners();
     }
 
     /**
@@ -49,34 +50,26 @@ class LightspeedServiceProvider extends ServiceProvider
         return ['lightspeed'];
     }
 
-    /**
-     * Console-specific booting.
-     *
-     * @return void
-     */
-    protected function bootForConsole(): void
+    private function registerListeners()
     {
-        // Publishing the configuration file.
-        $this->publishes([
-            __DIR__.'/../config/lightspeed.php' => config_path('lightspeed.php'),
-        ], 'lightspeed.config');
+        Event::listen(
+            \YoungOnes\Lightspeed\Server\Events\ConnectedToServer::class,
+            \YoungOnes\Lightspeed\Server\Listeners\ConnectedToServer::class
+        );
 
-        // Publishing the views.
-        /*$this->publishes([
-            __DIR__.'/../resources/views' => base_path('resources/views/vendor/youngones'),
-        ], 'lightspeed.views');*/
+        Event::listen(
+            \YoungOnes\Lightspeed\Server\Events\DataReceived::class,
+            \YoungOnes\Lightspeed\Server\Listeners\DataReceived::class
+        );
 
-        // Publishing assets.
-        /*$this->publishes([
-            __DIR__.'/../resources/assets' => public_path('vendor/youngones'),
-        ], 'lightspeed.views');*/
+        Event::listen(
+            \YoungOnes\Lightspeed\Server\Events\SendingResponse::class,
+            \YoungOnes\Lightspeed\Server\Listeners\SendingResponse::class
+        );
 
-        // Publishing the translation files.
-        /*$this->publishes([
-            __DIR__.'/../resources/lang' => resource_path('lang/vendor/youngones'),
-        ], 'lightspeed.views');*/
-
-        // Registering package commands.
-        // $this->commands([]);
+        Event::listen(
+            \YoungOnes\Lightspeed\Server\Events\ResponseSent::class,
+            \YoungOnes\Lightspeed\Server\Listeners\ResponseSent::class
+        );
     }
 }
