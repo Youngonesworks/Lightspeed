@@ -71,5 +71,15 @@ class LightspeedServiceProvider extends ServiceProvider
             \YoungOnes\Lightspeed\Server\Events\ResponseSent::class,
             \YoungOnes\Lightspeed\Server\Listeners\ResponseSent::class
         );
+
+        Event::listen(
+            \YoungOnes\Lightspeed\Server\Events\ClosingConnection::class,
+            \YoungOnes\Lightspeed\Server\Listeners\ClosingConnection::class
+        );
+
+        Event::listen(
+            \YoungOnes\Lightspeed\Server\Events\ClosedConnection::class,
+            \YoungOnes\Lightspeed\Server\Listeners\ClosedConnection::class
+        );
     }
 }

@@ -4,12 +4,19 @@
 namespace YoungOnes\Lightspeed\Server;
 
 use CBOR\CBOREncoder;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Log;
 use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
+use Symfony\Component\HttpFoundation\Response;
+use YoungOnes\Lightspeed\Payload\PayloadFactory;
+use YoungOnes\Lightspeed\Server\Events\ClosedConnection;
+use YoungOnes\Lightspeed\Server\Events\ClosingConnection;
 use YoungOnes\Lightspeed\Server\Events\ConnectedToServer;
 use YoungOnes\Lightspeed\Server\Events\DataReceived;
 use YoungOnes\Lightspeed\Server\Events\SendingResponse;
@@ -43,14 +50,22 @@ class Server
                 }
 
                 $decodedData = CBOREncoder::decode($data);
-                // TODO: Process
-                $responseData = ['This', 'is', 'a', ['response']];
+                // TODO: Process request to hold decoded data
+                $processedRequest = SymfonyRequest::create($decodedData['uri'], $decodedData['method'], $decodedData['parameters'] ?? []);
+                $processedRequest = Request::createFromBase($processedRequest);
+                /** @var Response $response */
+                $response = app()->make(Router::class)->dispatch($processedRequest);
+                dd($response->getContent());
+                $responseData = PayloadFactory::createFromResponse($response);
                 $responseData = CBOREncoder::encode($responseData);
 
                 SendingResponse::dispatch($connection->getRemoteAddress());
                 $connection->write($responseData);
                 ResponseSent::dispatch($connection->getRemoteAddress());
+
+                ClosingConnection::dispatch($connection->getRemoteAddress());
                 $connection->close();
+                ClosedConnection::dispatch();
             });
         });
 

@@ -3,6 +3,7 @@
 
 namespace YoungOnes\Lightspeed\Payload;
 
+use Symfony\Component\HttpFoundation\Response;
 use YoungOnes\Lightspeed\Contracts\Payload\PayloadFactoryContract;
 use YoungOnes\Lightspeed\Requests\Request;
 
@@ -13,9 +14,16 @@ class PayloadFactory implements  PayloadFactoryContract
         // TODO: Implement HMAC.
         return [
             'uri' => (string) $request->getUri(),
-            'data' => json_decode($request->getBody()->getContents()),
+            'parameters' => json_decode($request->getBody()->getContents()),
             'method' => $request->getMethod(),
             'headers' => $request->getHeaders()
         ];
+    }
+
+    public static function createFromResponse(Response $response): array
+    {
+        // TODO: Implement HMAC
+        // TODO: Implement
+        return [];
     }
 }
