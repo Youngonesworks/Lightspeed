@@ -2,21 +2,24 @@
 
 namespace YoungOnes\Lightspeed;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use YoungOnes\Lightspeed\Console\ServerCommand;
+use YoungOnes\Lightspeed\Requests\Request;
 use YoungOnes\Lightspeed\Server\Events\DataReceived;
 
 class LightspeedServiceProvider extends ServiceProvider
 {
-
     public function boot(): void
     {
         $this->publishes([
             __DIR__.'/../config/lightspeed_server.php' => config_path('lightspeed_server.php'),
         ], 'lightspeed.config');
 
-
+        Router::macro('lightspeed', function ($uri, $action) {
+            return $this->addRoute(Request::METHOD, $uri, $action);
+        });
     }
 
     /**
@@ -80,6 +83,11 @@ class LightspeedServiceProvider extends ServiceProvider
         Event::listen(
             \YoungOnes\Lightspeed\Server\Events\ClosedConnection::class,
             \YoungOnes\Lightspeed\Server\Listeners\ClosedConnection::class
+        );
+
+        Event::listen(
+            \YoungOnes\Lightspeed\Client\Events\DataReceived::class,
+            \YoungOnes\Lightspeed\Client\Listeners\DataReceived::class
         );
     }
 }

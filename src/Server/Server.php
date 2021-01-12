@@ -4,6 +4,7 @@
 namespace YoungOnes\Lightspeed\Server;
 
 use CBOR\CBOREncoder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +16,7 @@ use React\Socket\TcpServer;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response;
 use YoungOnes\Lightspeed\Payload\PayloadFactory;
+use YoungOnes\Lightspeed\Routing\RouteResolver;
 use YoungOnes\Lightspeed\Server\Events\ClosedConnection;
 use YoungOnes\Lightspeed\Server\Events\ClosingConnection;
 use YoungOnes\Lightspeed\Server\Events\ConnectedToServer;
@@ -51,20 +53,19 @@ class Server
 
                 $decodedData = CBOREncoder::decode($data);
                 // TODO: Process request to hold decoded data
-                $processedRequest = SymfonyRequest::create($decodedData['uri'], $decodedData['method'], $decodedData['parameters'] ?? []);
-                $processedRequest = Request::createFromBase($processedRequest);
-                /** @var Response $response */
-                $response = app()->make(Router::class)->dispatch($processedRequest);
-                dd($response->getContent());
-                $responseData = PayloadFactory::createFromResponse($response);
-                $responseData = CBOREncoder::encode($responseData);
+                $resolvedRoute = RouteResolver::resolve($decodedData);
+                $response = $resolvedRoute->run()->toResponse();
+                $data = $response->getContent();
+                $data = array_merge(json_decode($data, true), ['status_code' => $response->getStatusCode()]);
+                ray($data);
 
                 SendingResponse::dispatch($connection->getRemoteAddress());
-                $connection->write($responseData);
+                $connection->write(CBOREncoder::encode($data));
                 ResponseSent::dispatch($connection->getRemoteAddress());
 
                 ClosingConnection::dispatch($connection->getRemoteAddress());
-                $connection->close();
+// TODO: Fixme
+//                $connection->close();
                 ClosedConnection::dispatch();
             });
         });
