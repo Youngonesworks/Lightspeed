@@ -9,7 +9,7 @@
 
 Lightspeed is a lightweight communication solution for distributed Laravel applications inspired by gRPC. Without Protocol buffers.
 
-What Lightspeed essentially does is run your normal routes, but streams the output over a TCP socket. The data is encrypted as [CBOR](https://cbor.io/). 
+What Lightspeed essentially does is run your normal routes, but streams the output over a TCP socket. The data is encoded as [CBOR](https://cbor.io/). 
 
 ## Installation
 
