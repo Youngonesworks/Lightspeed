@@ -13,48 +13,67 @@ use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\Connector;
 use YoungOnes\Lightspeed\Client\Events\DataReceived;
+use YoungOnes\Lightspeed\Contracts\Payload\RequestPayloadContract;
+use YoungOnes\Lightspeed\Events\ConnectionClosed;
+use YoungOnes\Lightspeed\Events\ConnectionEnded;
+use YoungOnes\Lightspeed\Events\ConnectionError;
 use YoungOnes\Lightspeed\Exceptions\NotWriteableConnectionException;
+use YoungOnes\Lightspeed\Payload\PayloadFactory;
+use YoungOnes\Lightspeed\Payload\ResponsePayload;
 use YoungOnes\Lightspeed\Requests\PendingRequest;
 use YoungOnes\Lightspeed\Requests\Request;
 
 class Client
 {
-    private string $socketUri;
     private Connector $connector;
     private LoopInterface $loop;
 
-    private function __construct(PendingRequest $request)
+    public function __construct()
     {
-        $this->socketUri = $request->getSocketUri();
         $this->loop = Factory::create();
         $this->connector = new Connector($this->loop);
     }
 
-    public static function send(Request $request): self
+    public function send(Request $request)
     {
-        $pendingRequest = new PendingRequest($request);
-        $instance = new static($pendingRequest);
+        $payload = PayloadFactory::createFromRequest($request);
 
-        $instance->connector->connect($pendingRequest->getSocketUri())
-            ->then(static function(ConnectionInterface $connection) use ($pendingRequest) {
+        $this->connector->connect($payload->getReceivingAddress())
+            ->then(static function(ConnectionInterface $connection) use ($payload) {
                 throw_unless($connection->isWritable(), NotWriteableConnectionException::class);
 
-                $connection->write($pendingRequest->getEncodedData());
+                $connection->write($payload->getEncodedData());
+//                $connection->end();
 
                 $connection->on('data', function ($data) use ($connection) {
+//                    $connection->end();
+                    ray('djhkwdiu');
                     DataReceived::dispatch();
-                    $data = CBOREncoder::decode($data);
+                    $responsePayload = ResponsePayload::fromEncodedData($data);
+//                    $data = CBOREncoder::decode($data);
 
 
-                    ray($data);
+                    ray($responsePayload);
 //                    new JsonResponse()
-                    $connection->close();
+//                    $connection->close();
                 });
+
+
+                $connection->on('end', function () {
+                    ConnectionEnded::dispatch();
+                });
+
+                $connection->on('error', function (\Exception $exception) {
+                    ConnectionError::dispatch($exception);
+                });
+
+                $connection->on('close', function () {
+                    ConnectionClosed::dispatch();
+                });
+
             });
 
-        $instance->loop->run();
-
-        return $instance;
+        $this->loop->run();
     }
 
 }

@@ -15,7 +15,12 @@ use React\Socket\ServerInterface;
 use React\Socket\TcpServer;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response;
+use YoungOnes\Lightspeed\Events\ConnectionClosed;
+use YoungOnes\Lightspeed\Events\ConnectionEnded;
+use YoungOnes\Lightspeed\Events\ConnectionError;
+use YoungOnes\Lightspeed\Exceptions\NotWriteableConnectionException;
 use YoungOnes\Lightspeed\Payload\PayloadFactory;
+use YoungOnes\Lightspeed\Payload\RequestPayload;
 use YoungOnes\Lightspeed\Routing\RouteResolver;
 use YoungOnes\Lightspeed\Server\Events\ClosedConnection;
 use YoungOnes\Lightspeed\Server\Events\ClosingConnection;
@@ -51,38 +56,41 @@ class Server
                     return;
                 }
 
-                $decodedData = CBOREncoder::decode($data);
-                // TODO: Process request to hold decoded data
-                $resolvedRoute = RouteResolver::resolve($decodedData);
+                $requestPayload = RequestPayload::fromEncodedData($data);
+                $resolvedRoute = RouteResolver::resolve($requestPayload);
                 $response = $resolvedRoute->run()->toResponse();
-                $data = $response->getContent();
-                $data = array_merge(json_decode($data, true), ['status_code' => $response->getStatusCode()]);
-                ray($data);
+                $payload = PayloadFactory::createFromResponse($response);
 
+                ray($payload);
+
+                throw_unless($connection->isWritable(), NotWriteableConnectionException::class);
                 SendingResponse::dispatch($connection->getRemoteAddress());
-                $connection->write(CBOREncoder::encode($data));
+                ray($payload->getEncodedData());
+//                $connection->write('ddd');
+                $ff = $connection->write($payload->getEncodedData());
+
+                ray('ff', $ff);
                 ResponseSent::dispatch($connection->getRemoteAddress());
 
-                ClosingConnection::dispatch($connection->getRemoteAddress());
-// TODO: Fixme
+//                ClosingConnection::dispatch($connection->getRemoteAddress());
+//// TODO: Fixme
+//                sleep(3);
+                $connection->end();
 //                $connection->close();
-                ClosedConnection::dispatch();
+//                ClosedConnection::dispatch();
             });
-        });
 
-        $this->server->on('error', static function (\Exception $e) {
-            $error = sprintf(
-                'Uncaught exception "%s"([%d]%s) at %s:%s, %s%s',
-                get_class($e),
-                $e->getCode(),
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine(),
-                PHP_EOL,
-                $e->getTraceAsString()
-            );
+            $connection->on('end', function () {
+                ConnectionEnded::dispatch();
+            });
 
-            die($error);
+            $connection->on('error', function (\Exception $exception) {
+                ConnectionError::dispatch($exception);
+            });
+
+            $connection->on('close', function () {
+                ConnectionClosed::dispatch();
+            });
         });
     }
 }

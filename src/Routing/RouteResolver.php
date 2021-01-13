@@ -12,6 +12,7 @@ use Illuminate\Routing\RouteCollection;
 use Illuminate\Routing\Router;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response;
+use YoungOnes\Lightspeed\Payload\RequestPayload;
 
 class RouteResolver
 {
@@ -25,9 +26,9 @@ class RouteResolver
         $this->request = $request;
     }
 
-    public static function resolve(array $data): self
+    public static function resolve(RequestPayload $payload): self
     {
-        $request = SymfonyRequest::create($data['uri'], $data['method'], $data['parameters'] ?? []);
+        $request = SymfonyRequest::create($payload->getUri(), $payload->getMethod(), $payload->parameters()->all());
         $request = Request::createFromBase($request);
 
         return new static($request);
