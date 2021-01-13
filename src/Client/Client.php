@@ -34,24 +34,24 @@ class Client
         $this->connector = new Connector($this->loop);
     }
 
-    public function send(Request $request)
+    public function send(Request $request, callable $callback)
     {
         $payload = PayloadFactory::createFromRequest($request);
 
         $this->connector->connect($payload->getReceivingAddress())
-            ->then(static function(ConnectionInterface $connection) use ($payload) {
+            ->then(static function(ConnectionInterface $connection) use ($payload, $callback) {
                 throw_unless($connection->isWritable(), NotWriteableConnectionException::class);
 
                 $connection->write($payload->getEncodedData());
 //                $connection->end();
 
-                $connection->on('data', function ($data) use ($connection) {
+                $connection->on('data', function ($data) use ($connection, $callback) {
 //                    $connection->end();
                     ray('djhkwdiu');
                     DataReceived::dispatch();
                     $responsePayload = ResponsePayload::fromEncodedData($data);
 //                    $data = CBOREncoder::decode($data);
-
+                    $callback($responsePayload);
 
                     ray($responsePayload);
 //                    new JsonResponse()
