@@ -65,10 +65,6 @@ class Server
                 SendingResponse::dispatch($connection->getRemoteAddress());
                 $connection->write($payload->getEncodedData());
                 ResponseSent::dispatch($connection->getRemoteAddress());
-
-                ClosingConnection::dispatch($connection->getRemoteAddress());
-                $connection->close();
-                ClosedConnection::dispatch();
             });
 
             $connection->on('end', static function (): void {

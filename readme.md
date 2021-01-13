@@ -1,11 +1,15 @@
-# Lightspeed
+<p align="center">
+    <img title="Lightspeed" height="200" src="https://raw.githubusercontent.com/Youngonesworks/Lightspeed/master/docs/images/logo-readme.png" />
+</p>
+<p align="center">
+      <a href="https://packagist.org/packages/laravel-zero/framework"><img src="https://img.shields.io/packagist/dt/youngones/lightspeed.svg" alt="Total Downloads"></a>
+  <a href="https://packagist.org/packages/laravel-zero/framework"><img src="https://img.shields.io/packagist/v/youngones/lightspeed.svg?label=stable" alt="Latest Stable Version"></a>
+  <a href="https://packagist.org/packages/laravel-zero/framework"><img src="https://img.shields.io/packagist/l/youngones/lightspeed.svg" alt="License"></a>
+</p>
 
-[![Latest Version on Packagist][ico-version]][link-packagist]
-[![Total Downloads][ico-downloads]][link-downloads]
-[![Build Status][ico-travis]][link-travis]
-[![StyleCI][ico-styleci]][link-styleci]
+Lightspeed is a lightweight communication solution for distributed Laravel applications inspired by gRPC. Without Protocol buffers.
 
-This is where your description should go. Take a look at [contributing.md](contributing.md) to see a to do list.
+What Lightspeed essentially does is run your normal routes, but streams the output over a TCP socket. The data is encrypted as [CBOR](https://cbor.io/). 
 
 ## Installation
 
@@ -16,6 +20,26 @@ $ composer require youngones/lightspeed
 ```
 
 ## Usage
+
+### Server side:
+1. Define the route you wish to request via Lightspeed:
+```php
+// ./routes/web.php
+Route::lightspeed('/test', 'TestController');
+```
+2. Start the Lightspeed server:
+
+```
+$ php artisan lightspeed:server start
+```
+
+### Client side:
+```php
+// Create an instance of `\YoungOnes\Lightspeed\Client\Client`
+$client = new \YoungOnes\Lightspeed\Client\Client();
+// Create a request
+$request = new \YoungOnes\Lightspeed\Requests\Request('127.0.0.1:9810', '/api/test', ['Authorization' => 'Bearer'])
+```
 
 ## Change log
 
