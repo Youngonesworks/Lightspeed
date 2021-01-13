@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Payload;
 
@@ -7,7 +8,6 @@ use CBOR\CBOREncoder;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use YoungOnes\Lightspeed\Contracts\Payload\RequestPayloadContract;
-use YoungOnes\Lightspeed\Contracts\Payload\ResponsePayloadContract;
 
 class RequestPayload implements RequestPayloadContract
 {
@@ -19,11 +19,11 @@ class RequestPayload implements RequestPayloadContract
 
     public function __construct(string $to, string $uri, string $method = 'LIGHTSPEED', array $parameters = [], array $headers = [])
     {
-        $this->to = $to;
-        $this->uri = $uri;
-        $this->method = $method;
+        $this->to         = $to;
+        $this->uri        = $uri;
+        $this->method     = $method;
         $this->parameters = new ParameterBag($parameters);
-        $this->headers = new HeaderBag($headers);
+        $this->headers    = new HeaderBag($headers);
     }
 
     public static function fromEncodedData($data): self
@@ -40,7 +40,7 @@ class RequestPayload implements RequestPayloadContract
             'uri' => $this->uri,
             'method' => $this->method,
             'parameters' => $this->parameters->all(),
-            'headers' => $this->headers->all()
+            'headers' => $this->headers->all(),
         ];
     }
 
@@ -83,5 +83,4 @@ class RequestPayload implements RequestPayloadContract
     {
         return $this->to;
     }
-
 }

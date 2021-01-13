@@ -1,20 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace YoungOnes\Lightspeed;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use YoungOnes\Lightspeed\Console\ServerCommand;
+use YoungOnes\Lightspeed\Events\ConnectionClosed;
+use YoungOnes\Lightspeed\Events\ConnectionEnded;
+use YoungOnes\Lightspeed\Events\ConnectionError;
 use YoungOnes\Lightspeed\Requests\Request;
+use YoungOnes\Lightspeed\Server\Events\ClosedConnection;
+use YoungOnes\Lightspeed\Server\Events\ClosingConnection;
+use YoungOnes\Lightspeed\Server\Events\ConnectedToServer;
 use YoungOnes\Lightspeed\Server\Events\DataReceived;
+use YoungOnes\Lightspeed\Server\Events\ResponseSent;
+use YoungOnes\Lightspeed\Server\Events\SendingResponse;
 
 class LightspeedServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../config/lightspeed_server.php' => config_path('lightspeed_server.php'),
+            __DIR__ . '/../config/lightspeed_server.php' => config_path('lightspeed_server.php'),
         ], 'lightspeed.config');
 
         Router::macro('lightspeed', function ($uri, $action) {
@@ -24,21 +34,17 @@ class LightspeedServiceProvider extends ServiceProvider
 
     /**
      * Register any package services.
-     *
-     * @return void
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/lightspeed_server.php', 'lightspeed_server');
+        $this->mergeConfigFrom(__DIR__ . '/../config/lightspeed_server.php', 'lightspeed_server');
 
         // Register the service the package provides.
-        $this->app->singleton('lightspeed', function ($app) {
-            return new Lightspeed;
+        $this->app->singleton('lightspeed', static function ($app) {
+            return new Lightspeed();
         });
 
-        $this->commands([
-            ServerCommand::class
-        ]);
+        $this->commands([ServerCommand::class]);
 
         $this->registerListeners();
     }
@@ -48,40 +54,40 @@ class LightspeedServiceProvider extends ServiceProvider
      *
      * @return array
      */
-    public function provides()
+    public function provides(): array
     {
         return ['lightspeed'];
     }
 
-    private function registerListeners()
+    private function registerListeners(): void
     {
         Event::listen(
-            \YoungOnes\Lightspeed\Server\Events\ConnectedToServer::class,
+            ConnectedToServer::class,
             \YoungOnes\Lightspeed\Server\Listeners\ConnectedToServer::class
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Server\Events\DataReceived::class,
+            DataReceived::class,
             \YoungOnes\Lightspeed\Server\Listeners\DataReceived::class
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Server\Events\SendingResponse::class,
+            SendingResponse::class,
             \YoungOnes\Lightspeed\Server\Listeners\SendingResponse::class
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Server\Events\ResponseSent::class,
+            ResponseSent::class,
             \YoungOnes\Lightspeed\Server\Listeners\ResponseSent::class
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Server\Events\ClosingConnection::class,
+            ClosingConnection::class,
             \YoungOnes\Lightspeed\Server\Listeners\ClosingConnection::class
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Server\Events\ClosedConnection::class,
+            ClosedConnection::class,
             \YoungOnes\Lightspeed\Server\Listeners\ClosedConnection::class
         );
 
@@ -91,17 +97,17 @@ class LightspeedServiceProvider extends ServiceProvider
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Events\ConnectionError::class,
+            ConnectionError::class,
             \YoungOnes\Lightspeed\Listeners\ConnectionError::class
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Events\ConnectionEnded::class,
+            ConnectionEnded::class,
             \YoungOnes\Lightspeed\Listeners\ConnectionEnded::class
         );
 
         Event::listen(
-            \YoungOnes\Lightspeed\Events\ConnectionClosed::class,
+            ConnectionClosed::class,
             \YoungOnes\Lightspeed\Listeners\ConnectionClosed::class
         );
     }

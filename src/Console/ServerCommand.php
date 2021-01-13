@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Console;
 
-
 use Illuminate\Console\Command;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 use YoungOnes\Lightspeed\Server\Server;
+
+use function get_class;
+use function sprintf;
+
+use const PHP_BINARY;
+use const PHP_EOL;
 
 class ServerCommand extends Command
 {
@@ -27,10 +30,11 @@ class ServerCommand extends Command
             switch ($action) {
                 case 'start':
                     return $this->start();
+
                 default:
                     return $this->showHelp();
             }
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $error = sprintf(
                 'Uncaught exception "%s"([%d]%s) at %s:%s, %s%s',
                 get_class($e),
@@ -42,6 +46,7 @@ class ServerCommand extends Command
                 $e->getTraceAsString()
             );
             $this->error($error);
+
             return 1;
         }
     }
@@ -56,16 +61,16 @@ class ServerCommand extends Command
             EOS;
 
         $this->info(sprintf($help, PHP_BINARY));
+
         return 0;
     }
 
     private function start()
     {
-
-        $uri = config('lightspeed_server.port');
+        $uri      = config('lightspeed_server.port');
         $hostname = config('lightspeed_server.host');
 
-        if (!empty($hostname)) {
+        if (! empty($hostname)) {
             $uri = sprintf('%s:%s', $hostname, $uri);
         }
 
@@ -76,5 +81,4 @@ class ServerCommand extends Command
 
         return 0;
     }
-
 }

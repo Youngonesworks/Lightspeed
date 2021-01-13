@@ -1,14 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace YoungOnes\Lightspeed\Payload;
 
 use CBOR\CBOREncoder;
-use http\Exception\InvalidArgumentException;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\HeaderBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\Response;
 use YoungOnes\Lightspeed\Contracts\Payload\ResponsePayloadContract;
-use YoungOnes\Lightspeed\Exceptions\InvalidPayloadException;
 
 class ResponsePayload implements ResponsePayloadContract
 {
@@ -19,10 +19,10 @@ class ResponsePayload implements ResponsePayloadContract
 
     public function __construct(array $data = [], array $headers = [], int $statusCode = Response::HTTP_OK, ?string $exception = null)
     {
-        $this->data = new ParameterBag($data);
-        $this->headers = new HeaderBag($headers);
+        $this->data       = new ParameterBag($data);
+        $this->headers    = new HeaderBag($headers);
         $this->statusCode = $statusCode;
-        $this->exception = $exception;
+        $this->exception  = $exception;
     }
 
     public function getEncodedData()
@@ -61,7 +61,7 @@ class ResponsePayload implements ResponsePayloadContract
             'data'        => $this->data->all(),
             'headers'     => $this->headers->all(),
             'status_code' => $this->statusCode,
-            'exception'   => $this->exception
+            'exception'   => $this->exception,
         ];
     }
 

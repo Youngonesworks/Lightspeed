@@ -1,18 +1,19 @@
 <?php
 
+declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Payload;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
+use YoungOnes\Lightspeed\Contracts\Payload\PayloadFactoryContract;
 use YoungOnes\Lightspeed\Contracts\Payload\RequestPayloadContract;
 use YoungOnes\Lightspeed\Contracts\Payload\ResponsePayloadContract;
-use YoungOnes\Lightspeed\Contracts\Payload\PayloadFactoryContract;
 use YoungOnes\Lightspeed\Requests\Request;
+
+use function json_decode;
 
 class PayloadFactory implements PayloadFactoryContract
 {
-
     public static function createFromRequest(Request $request): RequestPayloadContract
     {
         // TODO: Implement HMAC.

@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Client\Listeners;
 
@@ -8,10 +9,12 @@ use YoungOnes\Lightspeed\Log\LogLevel;
 
 class DataReceived
 {
-    public function handle()
+    public function handle(): void
     {
-        if (config('lightspeed_server.log_level') === LogLevel::TRACE) {
-            Log::channel('stderr')->debug('Received response from server. Closing Connection.');
+        if (config('lightspeed_server.log_level') !== LogLevel::TRACE) {
+            return;
         }
+
+        Log::channel('stderr')->debug('Received response from server. Closing Connection.');
     }
 }

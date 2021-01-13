@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Server\Events;
 
-
-use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class ConnectedToServer
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public string $remoteAddress;
 

@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Routing;
-
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Route;
-use Illuminate\Routing\RouteCollection;
 use Illuminate\Routing\Router;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +21,7 @@ class RouteResolver
 
     private function __construct(Request $request)
     {
-        $this->router = app()->make(Router::class);
+        $this->router  = app()->make(Router::class);
         $this->request = $request;
     }
 
@@ -34,7 +33,7 @@ class RouteResolver
         return new static($request);
     }
 
-    public function run()
+    public function run(): self
     {
         $route = $this->findRoute();
 
@@ -66,9 +65,8 @@ class RouteResolver
         return $response->prepare($this->request);
     }
 
-    public function getResult()
+    public function getResult(): Request
     {
         return $this->request;
     }
-
 }

@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Exceptions;
 
+use Exception;
 
-class InvalidPayloadException extends \Exception
+use function json_last_error;
+
+class InvalidPayloadException extends Exception
 {
     public function __construct($message = null)
     {
