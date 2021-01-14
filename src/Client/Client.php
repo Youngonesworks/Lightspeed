@@ -51,7 +51,7 @@ class Client
                 });
 
                 $connection->on('end', static function (): void {
-                    event( new ConnectionEnded());
+                    event(new ConnectionEnded());
                 });
 
                 $connection->on('error', static function (Throwable $exception): void {

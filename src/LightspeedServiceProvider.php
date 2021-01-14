@@ -19,6 +19,8 @@ use YoungOnes\Lightspeed\Server\Events\DataReceived;
 use YoungOnes\Lightspeed\Server\Events\ResponseSent;
 use YoungOnes\Lightspeed\Server\Events\SendingResponse;
 
+use function class_exists;
+
 class LightspeedServiceProvider extends ServiceProvider
 {
     public function boot(): void
@@ -27,11 +29,13 @@ class LightspeedServiceProvider extends ServiceProvider
             __DIR__ . '/../config/lightspeed_server.php' => base_path('config/lightspeed_server.php'),
         ], 'lightspeed.config');
 
-        if (class_exists('\Illuminate\Routing\Router')) {
-            Router::macro('lightspeed', function ($uri, $action) {
-                return $this->addRoute(Request::METHOD, $uri, $action);
-            });
+        if (! class_exists('\Illuminate\Routing\Router')) {
+            return;
         }
+
+        Router::macro('lightspeed', function ($uri, $action) {
+            return $this->addRoute(Request::METHOD, $uri, $action);
+        });
     }
 
     /**

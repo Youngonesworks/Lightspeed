@@ -10,5 +10,5 @@ interface ResponsePayloadContract
 
     public function toArray(): array;
 
-    public function getEncodedData();
+    public function getEncodedData(): void;
 }

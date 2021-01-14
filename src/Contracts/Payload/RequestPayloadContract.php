@@ -10,7 +10,7 @@ interface RequestPayloadContract
 
     public function toArray(): array;
 
-    public function getEncodedData();
+    public function getEncodedData(): void;
 
     public function getReceivingAddress(): string;
 }

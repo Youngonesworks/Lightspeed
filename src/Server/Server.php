@@ -18,13 +18,12 @@ use YoungOnes\Lightspeed\Payload\PayloadFactory;
 use YoungOnes\Lightspeed\Payload\RequestPayload;
 use YoungOnes\Lightspeed\Routing\LumenRouteResolver;
 use YoungOnes\Lightspeed\Routing\RouteResolver;
-use YoungOnes\Lightspeed\Server\Events\ClosedConnection;
-use YoungOnes\Lightspeed\Server\Events\ClosingConnection;
 use YoungOnes\Lightspeed\Server\Events\ConnectedToServer;
 use YoungOnes\Lightspeed\Server\Events\DataReceived;
 use YoungOnes\Lightspeed\Server\Events\ResponseSent;
 use YoungOnes\Lightspeed\Server\Events\SendingResponse;
 
+use function class_exists;
 use function throw_unless;
 
 class Server
@@ -60,22 +59,21 @@ class Server
                 $requestPayload = RequestPayload::fromEncodedData($data);
 
                 if (class_exists('\Laravel\Lumen\Routing\Router')) {
-                    $resolvedRoute  = LumenRouteResolver::resolve($requestPayload);
+                    $resolvedRoute = LumenRouteResolver::resolve($requestPayload);
                 } else {
-                    $resolvedRoute  = RouteResolver::resolve($requestPayload);
+                    $resolvedRoute = RouteResolver::resolve($requestPayload);
                 }
 
-                $response       = $resolvedRoute->run()->toResponse();
-                $payload        = PayloadFactory::createFromResponse($response);
+                $response = $resolvedRoute->run()->toResponse();
+                $payload  = PayloadFactory::createFromResponse($response);
 
-
-                event( new SendingResponse($connection->getRemoteAddress()));
+                event(new SendingResponse($connection->getRemoteAddress()));
                 $connection->write($payload->getEncodedData());
                 event(new ResponseSent($connection->getRemoteAddress()));
             });
 
             $connection->on('end', static function (): void {
-                event( new ConnectionEnded());
+                event(new ConnectionEnded());
             });
 
             $connection->on('error', static function (Throwable $exception): void {

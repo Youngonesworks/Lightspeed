@@ -13,6 +13,9 @@ use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response;
 use YoungOnes\Lightspeed\Payload\RequestPayload;
 
+use function class_exists;
+use function trim;
+
 class RouteResolver
 {
     private Request $request;
@@ -34,13 +37,13 @@ class RouteResolver
     public function run(): self
     {
         if (class_exists('\Laravel\Lumen\Routing\Router')) {
-            $router = app()->make(\Laravel\Lumen\Routing\Router::class);
-            $method = $this->request->getMethod();
-            $pathInfo = '/'.trim($this->request->getPathInfo(), '/');
-            ray($method.$pathInfo);
+            $router   = app()->make(\Laravel\Lumen\Routing\Router::class);
+            $method   = $this->request->getMethod();
+            $pathInfo = '/' . trim($this->request->getPathInfo(), '/');
+            ray($method . $pathInfo);
             ray($router->getRoutes());
-            if (isset($router->getRoutes()[$method.$pathInfo])) {
-                $routeInfo = $router->getRoutes()[$method.$pathInfo];
+            if (isset($router->getRoutes()[$method . $pathInfo])) {
+                $routeInfo = $router->getRoutes()[$method . $pathInfo];
                 $this->request->setRouteResolver(static function () use ($routeInfo) {
                     return $routeInfo;
                 });
