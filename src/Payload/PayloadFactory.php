@@ -33,7 +33,7 @@ class PayloadFactory implements PayloadFactoryContract
         ray($responseContent);
 
         return new ResponsePayload(
-            $responseContent,
+            $responseContent['original'] ?? [],
             $response->headers->all(),
             $response->getStatusCode(),
             $response->exception ? $response->exception->getMessage() : ''

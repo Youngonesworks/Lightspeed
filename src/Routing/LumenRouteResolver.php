@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace YoungOnes\Lightspeed\Routing;
 
+use Closure;
+use http\Exception\RuntimeException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Laravel\Lumen\Routing\Closure as RoutingClosure;
 use Laravel\Lumen\Routing\Router;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,8 +59,14 @@ class LumenRouteResolver
         $action = $routeInfo['action'];
 
         if (isset($action['uses'])) {
-            return $this->callControllerAction([true, $routeInfo['action'], []]);
+            $this->result = $this->callControllerAction([true, $routeInfo['action'], []]);
+            ray('result set', $this->result);
+
+            return $this;
         }
+
+        $this->result = $this->callCallableAction([true, $routeInfo['action'], []]);
+        ray('result set from callable', $this->result);
 
         return $this;
     }
@@ -70,7 +79,6 @@ class LumenRouteResolver
 
         if (isset($router->getRoutes()[$method . $pathInfo])) {
             ray('route found');
-
             return $router->getRoutes()[$method . $pathInfo];
         }
 
@@ -112,7 +120,34 @@ class LumenRouteResolver
         }
 
         try {
-            return $this->result = app()->call([$instance, $method], $routeInfo[2]);
+            return app()->call([$instance, $method], $routeInfo[2]);
+        } catch (HttpResponseException $e) {
+            return $e->getResponse();
+        }
+    }
+
+    protected function callCallableAction($routeInfo)
+    {
+        foreach ($routeInfo[1] as $value) {
+            if ($value instanceof Closure) {
+                ray('Closure found');
+                $callable = $value->bindTo(new RoutingClosure);
+                break;
+            }
+
+            if (is_object($value) && is_callable($value)) {
+                ray('Callable object found');
+                $callable = $value;
+                break;
+            }
+        }
+
+        if (! isset($callable)) {
+            throw new RuntimeException('Unable to resolve route handler.');
+        }
+
+        try {
+            return app()->call($callable, $routeInfo[2]);
         } catch (HttpResponseException $e) {
             return $e->getResponse();
         }

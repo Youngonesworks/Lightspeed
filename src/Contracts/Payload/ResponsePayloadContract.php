@@ -10,5 +10,8 @@ interface ResponsePayloadContract
 
     public function toArray(): array;
 
-    public function getEncodedData(): void;
+    /**
+     * @return mixed
+     */
+    public function getEncodedData();
 }
