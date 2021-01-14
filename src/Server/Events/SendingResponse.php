@@ -9,9 +9,6 @@ use Illuminate\Queue\SerializesModels;
 
 class SendingResponse
 {
-    use Dispatchable;
-    use SerializesModels;
-
     public string $remoteAddress;
 
     public function __construct(string $remoteAddress)

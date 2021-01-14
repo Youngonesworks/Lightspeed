@@ -42,7 +42,7 @@ class Client
                 $connection->write($payload->getEncodedData());
 
                 $connection->on('data', static function ($data) use ($callback, $connection): void {
-                    DataReceived::dispatch();
+                    event(new DataReceived());
 
                     $responsePayload = ResponsePayload::fromEncodedData($data);
                     $callback($responsePayload);
@@ -51,15 +51,15 @@ class Client
                 });
 
                 $connection->on('end', static function (): void {
-                    ConnectionEnded::dispatch();
+                    event( new ConnectionEnded());
                 });
 
                 $connection->on('error', static function (Throwable $exception): void {
-                    ConnectionError::dispatch($exception);
+                    event(new ConnectionError($exception));
                 });
 
                 $connection->on('close', static function (): void {
-                    ConnectionClosed::dispatch();
+                    event(new ConnectionClosed());
                 });
             });
 

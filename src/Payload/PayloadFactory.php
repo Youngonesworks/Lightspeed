@@ -30,12 +30,12 @@ class PayloadFactory implements PayloadFactoryContract
     {
         // TODO: Implement HMAC
         $responseContent = json_decode($response->getContent(), true);
-
+        ray($responseContent);
         return new ResponsePayload(
-            $responseContent['original'],
+            $responseContent,
             $response->headers->all(),
             $response->getStatusCode(),
-            $responseContent['exception']
+            $response->exception ? $response->exception->getMessage() : ""
         );
     }
 }

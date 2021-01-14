@@ -24,12 +24,14 @@ class LightspeedServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/lightspeed_server.php' => config_path('lightspeed_server.php'),
+            __DIR__ . '/../config/lightspeed_server.php' => base_path('config/lightspeed_server.php'),
         ], 'lightspeed.config');
 
-        Router::macro('lightspeed', function ($uri, $action) {
-            return $this->addRoute(Request::METHOD, $uri, $action);
-        });
+        if (class_exists('\Illuminate\Routing\Router')) {
+            Router::macro('lightspeed', function ($uri, $action) {
+                return $this->addRoute(Request::METHOD, $uri, $action);
+            });
+        }
     }
 
     /**

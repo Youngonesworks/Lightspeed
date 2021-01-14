@@ -8,5 +8,4 @@ use Illuminate\Foundation\Events\Dispatchable;
 
 class ConnectionEnded
 {
-    use Dispatchable;
 }

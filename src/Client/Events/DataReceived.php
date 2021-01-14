@@ -9,6 +9,4 @@ use Illuminate\Queue\SerializesModels;
 
 class DataReceived
 {
-    use Dispatchable;
-    use SerializesModels;
 }

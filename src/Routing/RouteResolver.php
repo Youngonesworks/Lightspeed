@@ -15,13 +15,11 @@ use YoungOnes\Lightspeed\Payload\RequestPayload;
 
 class RouteResolver
 {
-    private Router $router;
     private Request $request;
     private $result;
 
     private function __construct(Request $request)
     {
-        $this->router  = app()->make(Router::class);
         $this->request = $request;
     }
 
@@ -35,6 +33,30 @@ class RouteResolver
 
     public function run(): self
     {
+        if (class_exists('\Laravel\Lumen\Routing\Router')) {
+            $router = app()->make(\Laravel\Lumen\Routing\Router::class);
+            $method = $this->request->getMethod();
+            $pathInfo = '/'.trim($this->request->getPathInfo(), '/');
+            ray($method.$pathInfo);
+            ray($router->getRoutes());
+            if (isset($router->getRoutes()[$method.$pathInfo])) {
+                $routeInfo = $router->getRoutes()[$method.$pathInfo];
+                $this->request->setRouteResolver(static function () use ($routeInfo) {
+                    return $routeInfo;
+                });
+
+                $action = $routeInfo[1];
+
+                if (isset($action['uses'])) {
+                    return $this->prepareResponse($this->callControllerAction($routeInfo));
+                }
+
+                ray('route found');
+            }
+
+            return $this;
+        }
+
         $route = $this->findRoute();
 
         $this->request->setRouteResolver(static function () use ($route) {
@@ -48,7 +70,7 @@ class RouteResolver
 
     private function findRoute(): Route
     {
-        $route = $this->router->getRoutes()->match($this->request);
+        $route = app()->make(Router::class)->getRoutes()->match($this->request);
         event(new RouteMatched($route, $this->request));
 
         return $route;

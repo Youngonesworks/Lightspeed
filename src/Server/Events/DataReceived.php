@@ -9,8 +9,7 @@ use Illuminate\Queue\SerializesModels;
 
 class DataReceived
 {
-    use Dispatchable;
-    use SerializesModels;
+
 
     public string $data;
     public string $remoteAddress;

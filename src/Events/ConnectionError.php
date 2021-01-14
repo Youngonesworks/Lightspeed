@@ -9,7 +9,6 @@ use Throwable;
 
 class ConnectionError
 {
-    use Dispatchable;
 
     private Throwable $exception;
 

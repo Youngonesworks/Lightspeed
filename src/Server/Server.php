@@ -16,6 +16,7 @@ use YoungOnes\Lightspeed\Events\ConnectionError;
 use YoungOnes\Lightspeed\Exceptions\NotWriteableConnectionException;
 use YoungOnes\Lightspeed\Payload\PayloadFactory;
 use YoungOnes\Lightspeed\Payload\RequestPayload;
+use YoungOnes\Lightspeed\Routing\LumenRouteResolver;
 use YoungOnes\Lightspeed\Routing\RouteResolver;
 use YoungOnes\Lightspeed\Server\Events\ClosedConnection;
 use YoungOnes\Lightspeed\Server\Events\ClosingConnection;
@@ -43,12 +44,12 @@ class Server
     private function bindServerEvents(): void
     {
         $this->server->on('connection', static function (ConnectionInterface $connection): void {
-            ConnectedToServer::dispatch($connection->getRemoteAddress());
+            event(new ConnectedToServer($connection->getRemoteAddress()));
 
             $connection->on('data', static function ($data) use ($connection): void {
                 throw_unless($connection->isWritable(), NotWriteableConnectionException::class);
 
-                DataReceived::dispatch($connection->getRemoteAddress(), $data);
+                event(new DataReceived($connection->getRemoteAddress(), $data));
 
                 if (empty($data)) {
                     $connection->close();
@@ -57,26 +58,32 @@ class Server
                 }
 
                 $requestPayload = RequestPayload::fromEncodedData($data);
-                $resolvedRoute  = RouteResolver::resolve($requestPayload);
+
+                if (class_exists('\Laravel\Lumen\Routing\Router')) {
+                    $resolvedRoute  = LumenRouteResolver::resolve($requestPayload);
+                } else {
+                    $resolvedRoute  = RouteResolver::resolve($requestPayload);
+                }
+
                 $response       = $resolvedRoute->run()->toResponse();
                 $payload        = PayloadFactory::createFromResponse($response);
 
 
-                SendingResponse::dispatch($connection->getRemoteAddress());
+                event( new SendingResponse($connection->getRemoteAddress()));
                 $connection->write($payload->getEncodedData());
-                ResponseSent::dispatch($connection->getRemoteAddress());
+                event(new ResponseSent($connection->getRemoteAddress()));
             });
 
             $connection->on('end', static function (): void {
-                ConnectionEnded::dispatch();
+                event( new ConnectionEnded());
             });
 
             $connection->on('error', static function (Throwable $exception): void {
-                ConnectionError::dispatch($exception);
+                event(new ConnectionError($exception));
             });
 
             $connection->on('close', static function (): void {
-                ConnectionClosed::dispatch();
+                event(new ConnectionClosed());
             });
         });
     }
